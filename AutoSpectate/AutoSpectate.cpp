@@ -9,40 +9,55 @@ std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 void AutoSpectate::onLoad()
 {
 	_globalCvarManager = cvarManager;
-	//cvarManager->log("Plugin loaded!");
 
-	//cvarManager->registerNotifier("my_aweseome_notifier", [&](std::vector<std::string> args) {
-	//	cvarManager->log("Hello notifier!");
-	//}, "", 0);
+	cvarManager->registerCvar("AutoSpectate_enable", "0", "Enable Plugin", false, true, 0, true, 1).addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) { Plugin_enabled = cvar.getBoolValue(); });
+	cvarManager->registerCvar("SpectatorIsAdmin", "0", "Spectator is Admin", false, true, 0, true, 1).addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) { SpectatorIsAdmin = cvar.getBoolValue(); });
 
-	//auto cvar = cvarManager->registerCvar("template_cvar", "hello-cvar", "just a example of a cvar");
-	//auto cvar2 = cvarManager->registerCvar("template_cvar2", "0", "just a example of a cvar with more settings", true, true, -10, true, 10 );
+	cvarManager->registerCvar("spectatorDelay", "1.8", "spectatorDelay", false, true, 0, true, 100, true).addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) { spectatorDelay = cvar.getFloatValue(); });
+	cvarManager->registerCvar("guiDelay", "1.0", "guiDelay", false, true, 0, true, 100, true).addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) { guiDelay = cvar.getFloatValue(); });
 
-	//cvar.addOnValueChanged([this](std::string cvarName, CVarWrapper newCvar) {
-	//	cvarManager->log("the cvar with name: " + cvarName + " changed");
-	//	cvarManager->log("the new value is:" + newCvar.getStringValue());
-	//});
-
-	//cvar2.addOnValueChanged(std::bind(&AutoSpectate::YourPluginMethod, this, _1, _2));
-
-	// enabled decleared in the header
-	//enabled = std::make_shared<bool>(false);
-	//cvarManager->registerCvar("TEMPLATE_Enabled", "0", "Enable the TEMPLATE plugin", true, true, 0, true, 1).bindTo(enabled);
-
-	//cvarManager->registerNotifier("NOTIFIER", [this](std::vector<std::string> params){FUNCTION();}, "DESCRIPTION", PERMISSION_ALL);
-	//cvarManager->registerCvar("CVAR", "DEFAULTVALUE", "DESCRIPTION", true, true, MINVAL, true, MAXVAL);//.bindTo(CVARVARIABLE);
-	//gameWrapper->HookEvent("FUNCTIONNAME", std::bind(&TEMPLATE::FUNCTION, this));
-	//gameWrapper->HookEventWithCallerPost<ActorWrapper>("FUNCTIONNAME", std::bind(&AutoSpectate::FUNCTION, this, _1, _2, _3));
-	//gameWrapper->RegisterDrawable(bind(&TEMPLATE::Render, this, std::placeholders::_1));
+	gameWrapper->HookEventPost("Function TAGame.MatchType_TA.AutoSpectate", [this](std::string eventName) { if(Plugin_enabled) enterSpectator(); });
+	gameWrapper->HookEventPost("Function TAGame.PRI_TA.Spectate", [this](std::string eventName) { if(Plugin_enabled) removeGUI(); });
 
 
-	//gameWrapper->HookEvent("Function TAGame.Ball_TA.Explode", [this](std::string eventName) {
-	//	cvarManager->log("Your hook got called and the ball went POOF");
-	//});
-	// You could also use std::bind here
-	//gameWrapper->HookEvent("Function TAGame.Ball_TA.Explode", std::bind(&AutoSpectate::YourPluginMethod, this);
 }
 
 void AutoSpectate::onUnload()
 {
+}
+
+void AutoSpectate::sendKey(int index) {
+
+	INPUT ip;
+
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.wScan = 0;
+	ip.ki.time = 0;
+	ip.ki.dwExtraInfo = 0;
+
+	ip.ki.wVk = index;
+	ip.ki.dwFlags = 0;
+	SendInput(1, &ip, sizeof(INPUT));
+
+	ip.ki.dwFlags = KEYEVENTF_KEYUP;
+	SendInput(1, &ip, sizeof(INPUT));
+}
+
+void AutoSpectate::enterSpectator() {
+
+	if (SpectatorIsAdmin) {
+		auto pc = gameWrapper->GetPlayerController();
+		if (pc.IsNull()) return;
+
+		pc.Spectate();
+		return;
+	}
+
+	gameWrapper->SetTimeout([this](GameWrapper* gw) { sendKey(0x28); sendKey(0x28); sendKey(0x0D); }, spectatorDelay);
+}
+
+void AutoSpectate::removeGUI() {
+
+	gameWrapper->SetTimeout([this](GameWrapper* gw) { cvarManager->executeCommand("replay_gui hud 0; replay_gui matchinfo 0"); }, guiDelay);
+
 }

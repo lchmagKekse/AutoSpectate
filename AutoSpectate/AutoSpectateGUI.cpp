@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "AutoSpectate.h"
 
-/* Plugin Settings Window code here
+
 std::string AutoSpectate::GetPluginName() {
 	return "AutoSpectate";
 }
@@ -10,72 +10,61 @@ void AutoSpectate::SetImGuiContext(uintptr_t ctx) {
 	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext*>(ctx));
 }
 
-// Render the plugin settings here
-// This will show up in bakkesmod when the plugin is loaded at
-//  f2 -> plugins -> AutoSpectate
 void AutoSpectate::RenderSettings() {
-	ImGui::TextUnformatted("AutoSpectate plugin settings");
-}
-*/
 
-/*
-// Do ImGui rendering here
-void AutoSpectate::Render()
-{
-	if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_None))
-	{
-		// Early out if the window is collapsed, as an optimization.
-		ImGui::End();
-		return;
+	CVarWrapper enableCvar = cvarManager->getCvar("AutoSpectate_enable");
+	if (!enableCvar) return;
+	bool enabled = enableCvar.getBoolValue();
+	if (ImGui::Checkbox("Enable plugin", &enabled))
+		enableCvar.setValue(enabled);
+
+	ImGui::SameLine();
+
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 0.6f), "(?)");
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Enables the plugin. Duh");
 	}
 
-	ImGui::End();
 
-	if (!isWindowOpen_)
-	{
-		cvarManager->executeCommand("togglemenu " + GetMenuName());
+	CVarWrapper AdminCvar = cvarManager->getCvar("SpectatorIsAdmin");
+	if (!AdminCvar) return;
+	bool Adminenabled = AdminCvar.getBoolValue();
+	if (ImGui::Checkbox("Spectator is Admin", &Adminenabled))
+		AdminCvar.setValue(Adminenabled);
+
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 0.6f), "(?)");
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("Enable this when the Spectator is the admin of the match.\nThe Spectator Delay will be ignored and the player instantly gets put into spectator upon joining the game.");
 	}
-}
 
-// Name of the menu that is used to toggle the window.
-std::string AutoSpectate::GetMenuName()
-{
-	return "autospectate";
-}
 
-// Title to give the menu
-std::string AutoSpectate::GetMenuTitle()
-{
-	return menuTitle_;
-}
+	float step = 0.01f;
+	if (ImGui::InputScalar("Spectator Delay", ImGuiDataType_Float, &spectatorDelay, true ? &step : NULL))
+		cvarManager->getCvar("spectatorDelay").setValue(spectatorDelay);
+	if (spectatorDelay < 0)
+		cvarManager->getCvar("spectatorDelay").setValue(0);
 
-// Don't call this yourself, BM will call this function with a pointer to the current ImGui context
-void AutoSpectate::SetImGuiContext(uintptr_t ctx)
-{
-	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext*>(ctx));
-}
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 0.6f), "(?)");
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("The delay in seconds when the player enters spectator.\nPlay around with this until you find the perfect timing. Depends on how fast/slow your PC is.");
+	}
 
-// Should events such as mouse clicks/key inputs be blocked so they won't reach the game
-bool AutoSpectate::ShouldBlockInput()
-{
-	return ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
-}
 
-// Return true if window should be interactive
-bool AutoSpectate::IsActiveOverlay()
-{
-	return true;
-}
+	if (ImGui::InputScalar("GUI Delay", ImGuiDataType_Float, &guiDelay, true ? &step : NULL))
+		cvarManager->getCvar("guiDelay").setValue(guiDelay);
+	if (guiDelay < 0)
+		cvarManager->getCvar("guiDelay").setValue(0);
 
-// Called when window is opened
-void AutoSpectate::OnOpen()
-{
-	isWindowOpen_ = true;
-}
+	ImGui::SameLine();
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 0.6f), "(?)");
+	if (ImGui::IsItemHovered()) {
+		ImGui::SetTooltip("The delay in seconds when the GUI gets removed after entering spectator mode.\nPlay around with this until you find the perfect timing. Depends on how many players join the game and fast/slow your PC is.");
+	}
 
-// Called when window is closed
-void AutoSpectate::OnClose()
-{
-	isWindowOpen_ = false;
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 0.6f), "Hover over the question marks for help");
+
+	ImGui::NewLine();
+	ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.4f, 0.5f), "Made by LchmagKekse");
 }
-*/
