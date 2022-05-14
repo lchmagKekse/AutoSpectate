@@ -16,9 +16,9 @@ void AutoSpectate::onLoad()
 	cvarManager->registerCvar("spectatorDelay", "1.8", "spectatorDelay", false, true, 0, true, 100, true).addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) { spectatorDelay = cvar.getFloatValue(); });
 	cvarManager->registerCvar("guiDelay", "1.0", "guiDelay", false, true, 0, true, 100, true).addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) { guiDelay = cvar.getFloatValue(); });
 
-	gameWrapper->HookEventPost("Function TAGame.MatchType_TA.AutoSpectate", [this](std::string eventName) { if(Plugin_enabled) enterSpectator(); });
+	gameWrapper->HookEventPost("Function TAGame.MatchType_TA.AutoSpectate", [this](std::string eventName) { if (Plugin_enabled) enterSpectator(); });
+	gameWrapper->HookEventPost("Function OnlineGameMatchmakingBase_X.Joining.EndState", [this](std::string eventName) { if (Plugin_enabled) enterSpectator(); });
 	gameWrapper->HookEventPost("Function TAGame.PRI_TA.Spectate", [this](std::string eventName) { if(Plugin_enabled) removeGUI(); });
-
 
 }
 
